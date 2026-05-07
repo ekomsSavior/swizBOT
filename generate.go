@@ -35,7 +35,7 @@ func main() {
     fmt.Println("[4/4] Generating bot config...")
     // XOR encrypt C2 URL and embed in bot binary
     
-    fmt.Println(`✅ swizBOT ready in ./output/`)
+    fmt.Println(` swizBOT ready in ./output/`)
     fmt.Println(`   - c2: HTTPS server on :8443`)
     fmt.Println(`   - bot.exe: Windows implant`)
     fmt.Println(`   - stager.bin: Raw shellcode for injection`)
