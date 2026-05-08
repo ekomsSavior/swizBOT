@@ -6,6 +6,8 @@
 
 swizBOT is a modular, shellcode-driven botnet framework written in Go, implementing **JakeSwiz's revolutionary CALL/POP XOR decoder** technique. It works on x86, x64, and **ARM64 Windows** (including Macs running Windows 11 via Prism emulation).
 
+## DISCLAIMER for educational purposes and authorized security testing only.
+
 ---
 
 ## Table of Contents
