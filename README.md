@@ -40,7 +40,7 @@ For educational purposes and authorized security testing only.
 
 Most botnets die the moment they hit a modern Windows box with ASLR, DEP, or ARM emulation. Their shellcode crashes. Their C2 gets signatured. Their worms fail to spread.
 
-Jake Swiz (0xXyc) figured out the fix. He dropped the knowledge publicly when everyone else was gatekeeping. This framework packages his techniques into a production-ready botnet.
+Jake Swiz (0xXyc) figured out the fix. He dropped the knowledge publicly.
 
 ---
 
