@@ -49,8 +49,8 @@ Jake Swiz (0xXyc) figured out the fix. He dropped the knowledge publicly.
 | Category | Capability |
 |----------|-----------|
 | Shellcode | Jake's CALL/POP XOR decoder (x86/x64/ARM64) |
-| PEB Walking | Dynamically resolves WinAPI addresses |
-| ASLR Bypass | Leaks libc addresses, builds ROP chains |
+| PEB Walking | Jakes Dynamically resolves WinAPI addresses |
+| ASLR Bypass | Jakes Leaks libc addresses, builds ROP chains |
 | Bot Client | Go-based, 2MB executable |
 | Worm Module | 15+ propagation methods |
 | Persistence | Registry, scheduled tasks, WMI |
