@@ -1,0 +1,19 @@
+.PHONY: all client c2 stager clean
+
+all: stager client c2
+
+client:
+	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w -H=windowsgui" -o output/bot.exe ./client
+
+c2:
+	go build -ldflags="-s -w" -o output/c2 ./c2
+
+stager:
+	python3 stager/encoder.py stager/downloader.bin stager/shellcode.bin
+
+clean:
+	rm -rf output/
+	mkdir output
+
+deps:
+	go mod tidy
