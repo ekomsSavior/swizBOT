@@ -75,25 +75,8 @@ swizBOT includes a **dark mode Web UI** that runs alongside the C2 server.
 
 **Web UI Preview:**
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  ⛧ swizBOT C2 ⛧                                    BOTS ONLINE: 3    TOTAL SEEN: 3  │
-├────────────────────────────────┬────────────────────────────────────────────┤
-│                                │  [exec] [whoami] [Send]                     │
-│  DESKTOP-ABC (windows/amd64)   │  ┌────────────────────────────────────────┐ │
-│  ● ONLINE                      │  │ > whoami                                │ │
-│  last seen: just now           │  │ DESKTOP-ABC\Administrator              │ │
-│                                │  │                                        │ │
-│  SURFACEPRO (windows/arm64)    │  │ [+] Command sent                        │ │
-│  ● ONLINE                      │  │ [✓] Result received                     │ │
-│  last seen: 2 min ago          │  └────────────────────────────────────────┘ │
-│                                │                                            │
-│  SERVER-2022 (windows/amd64)   │  [Preset Buttons]                           │
-│  ○ OFFLINE                     │  [whoami] [ipconfig] [tasklist]            │
-│  last seen: 2 hours ago        │  [UDP FLOOD] [TCP FLOOD] [ACTIVATE WORM]   │
-│                                │  [DOWNLOAD] [KILL BOT]                     │
-└────────────────────────────────┴────────────────────────────────────────────┘
-```
+<img width="714" height="652" alt="IMG_3538" src="https://github.com/user-attachments/assets/285101c4-d45a-44b8-b255-07795ed2c1b3" />
+
 
 ---
 
