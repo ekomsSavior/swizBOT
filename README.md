@@ -2,6 +2,8 @@
 
 # swizBOT — Church of Malware's Go Botnet Framework
 
+ by: ek0ms savi0r
+ 
 "We are Legion. We are already in your network."
 
 swizBOT is a modular, shellcode-driven botnet framework written in Go, implementing Jake Swiz's revolutionary CALL/POP XOR decoder technique. It works on x86, x64, and ARM64 Windows (including Macs running Windows 11 via Prism emulation).
