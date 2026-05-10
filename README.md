@@ -2,7 +2,7 @@
 
 # swizBOT — Church of Malware's Go Botnet Framework
 
- by: ek0ms savi0r
+ **by: ek0ms savi0r based off the JakeSwiz Holy Trinity Shellcode Research**
  
 "We are Legion. We are already in your network."
 
